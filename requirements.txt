@@ -19,6 +19,8 @@ Django==5.2.3
 fastapi==0.115.13
 filelock==3.18.0
 Flask==3.1.1
+Flask-Login
+Flask-SQLAlchemy
 gunicorn
 hyperlink==21.0.0
 idna==3.10
@@ -58,4 +60,3 @@ urllib3==2.5.0
 w3lib==2.3.1
 Werkzeug==3.1.3
 zope.interface==7.2
-攊慭汩癟污摩瑡牯昊慬歳昊慬歳氭杯湩昊慬歳洭楡੬汦獡⵫煳慬捬敨祭朊湵捩牯੮獰捹灯㉧戭湩牡੹敲畱獥獴猊汱污档浥੹敷歲敺杵漊数慮੩灯湥楡
