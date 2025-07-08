@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>Welcome to Digital Store</h1>
+        <p class="lead">Discover amazing movies, software, and games</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Movies</h5>
+                <p class="card-text">Latest blockbusters and classics</p>
+                <a href="{{ url_for('category_page', category='movie') }}" class="btn btn-primary">Browse Movies</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Software</h5>
+                <p class="card-text">Professional and productivity tools</p>
+                <a href="{{ url_for('category_page', category='software') }}" class="btn btn-primary">Browse Software</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Games</h5>
+                <p class="card-text">Exciting adventures and entertainment</p>
+                <a href="{{ url_for('category_page', category='game') }}" class="btn btn-primary">Browse Games</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if movies %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Featured Movies</h2>
+    </div>
+    {% for movie in movies %}
+    <div class="col-md-3 mb-3">
+        <div class="card">
+            {% if movie.image_url %}
+            <img src="{{ movie.image_url }}" class="card-img-top" alt="{{ movie.title }}" style="height: 300px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h6 class="card-title">{{ movie.title }}</h6>
+                <p class="card-text">${{ "%.2f"|format(movie.price) }}</p>
+                <a href="{{ url_for('product_detail', product_id=movie.id) }}" class="btn btn-primary btn-sm">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if software %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Featured Software</h2>
+    </div>
+    {% for item in software %}
+    <div class="col-md-3 mb-3">
+        <div class="card">
+            {% if item.image_url %}
+            <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}" style="height: 300px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h6 class="card-title">{{ item.title }}</h6>
+                <p class="card-text">${{ "%.2f"|format(item.price) }}</p>
+                <a href="{{ url_for('product_detail', product_id=item.id) }}" class="btn btn-primary btn-sm">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if games %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Featured Games</h2>
+    </div>
+    {% for game in games %}
+    <div class="col-md-3 mb-3">
+        <div class="card">
+            {% if game.image_url %}
+            <img src="{{ game.image_url }}" class="card-img-top" alt="{{ game.title }}" style="height: 300px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h6 class="card-title">{{ game.title }}</h6>
+                <p class="card-text">${{ "%.2f"|format(game.price) }}</p>
+                <a href="{{ url_for('product_detail', product_id=game.id) }}" class="btn btn-primary btn-sm">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Support Chat - Digital Store{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-comments"></i> Customer Support Chat
+                </h5>
+                <button id="clearChat" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-trash"></i> Clear Chat
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="chatContainer" style="height: 400px; overflow-y: auto; border: 1px solid #444; padding: 15px; margin-bottom: 15px; background-color: #1e1e1e;">
+                    <div id="chatMessages">
+                        <div class="message bot-message mb-3">
+                            <div class="d-flex">
+                                <div class="me-2">
+                                    <i class="fas fa-robot text-primary"></i>
+                                </div>
+                                <div class="message-content">
+                                    <strong>Support Assistant:</strong><br>
+                                    Hi! I'm here to help with any questions about Digital Store. Ask me about our products, orders, account issues, or anything else you need assistance with.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="messageInput" class="form-control" placeholder="Type your message here..." maxlength="500">
+                    <button id="sendButton" class="btn btn-primary" type="button">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
+                
+                <div id="typingIndicator" class="mt-2" style="display: none;">
+                    <small class="text-muted">
+                        <i class="fas fa-circle-notch fa-spin"></i> Support assistant is typing...
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3 text-center">
+            <small class="text-muted">
+                Need immediate assistance? <a href="mailto:support@digitalstore.com">Contact our support team</a>
+            </small>
+        </div>
+    </div>
+</div>
+
+<style>
+.message {
+    margin-bottom: 15px;
+}
+
+.user-message {
+    text-align: right;
+}
+
+.user-message .message-content {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 18px 18px 5px 18px;
+    display: inline-block;
+    max-width: 70%;
+}
+
+.bot-message .message-content {
+    background-color: #2d2d2d;
+    color: #ffffff;
+    padding: 10px 15px;
+    border-radius: 18px 18px 18px 5px;
+    display: inline-block;
+    max-width: 70%;
+    border: 1px solid #444;
+}
+
+.sentiment-indicator {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.sentiment-urgent {
+    color: #ff4444;
+}
+
+.sentiment-positive {
+    color: #28a745;
+}
+
+.sentiment-negative {
+    color: #dc3545;
+}
+
+.sentiment-neutral {
+    color: #6c757d;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+class ChatBot {
+    constructor() {
+        this.messageInput = document.getElementById('messageInput');
+        this.sendButton = document.getElementById('sendButton');
+        this.chatMessages = document.getElementById('chatMessages');
+        this.chatContainer = document.getElementById('chatContainer');
+        this.typingIndicator = document.getElementById('typingIndicator');
+        this.clearChatButton = document.getElementById('clearChat');
+        
+        this.bindEvents();
+        this.loadChatHistory();
+    }
+    
+    bindEvents() {
+        this.sendButton.addEventListener('click', () => this.sendMessage());
+        this.messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.sendMessage();
+            }
+        });
+        this.clearChatButton.addEventListener('click', () => this.clearChat());
+    }
+    
+    async sendMessage() {
+        const message = this.messageInput.value.trim();
+        if (!message) return;
+        
+        this.addMessage(message, 'user');
+        this.messageInput.value = '';
+        this.showTypingIndicator();
+        
+        try {
+            const response = await fetch('/chatbot/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message })
+            });
+            
+            const data = await response.json();
+            
+            this.hideTypingIndicator();
+            
+            if (data.success) {
+                this.addMessage(data.response, 'bot', data.sentiment);
+            } else {
+                this.addMessage(data.response || 'Sorry, I encountered an error. Please try again.', 'bot');
+            }
+        } catch (error) {
+            this.hideTypingIndicator();
+            this.addMessage('Sorry, I cannot connect right now. Please try again later.', 'bot');
+        }
+    }
+    
+    addMessage(content, sender, sentiment = null) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message mb-3`;
+        
+        let sentimentIndicator = '';
+        if (sentiment && sender === 'user') {
+            const emotionClass = sentiment.urgent ? 'sentiment-urgent' : 
+                               sentiment.rating >= 4 ? 'sentiment-positive' : 
+                               sentiment.rating <= 2 ? 'sentiment-negative' : 'sentiment-neutral';
+            sentimentIndicator = `<small class="sentiment-indicator ${emotionClass}">
+                ${sentiment.urgent ? '⚠️ ' : ''}${sentiment.emotion}
+            </small>`;
+        }
+        
+        if (sender === 'user') {
+            messageDiv.innerHTML = `
+                <div class="d-flex justify-content-end">
+                    <div class="message-content">
+                        <strong>You:</strong><br>${content}
+                        ${sentimentIndicator}
+                    </div>
+                    <div class="ms-2">
+                        <i class="fas fa-user text-info"></i>
+                    </div>
+                </div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="d-flex">
+                    <div class="me-2">
+                        <i class="fas fa-robot text-primary"></i>
+                    </div>
+                    <div class="message-content">
+                        <strong>Support Assistant:</strong><br>${content}
+                    </div>
+                </div>
+            `;
+        }
+        
+        this.chatMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+    
+    showTypingIndicator() {
+        this.typingIndicator.style.display = 'block';
+        this.sendButton.disabled = true;
+    }
+    
+    hideTypingIndicator() {
+        this.typingIndicator.style.display = 'none';
+        this.sendButton.disabled = false;
+    }
+    
+    scrollToBottom() {
+        this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+    }
+    
+    async loadChatHistory() {
+        try {
+            const response = await fetch('/chatbot/history');
+            const data = await response.json();
+            
+            if (data.history && data.history.length > 0) {
+                // Clear welcome message if there's history
+                this.chatMessages.innerHTML = '';
+                
+                data.history.forEach(msg => {
+                    const sender = msg.role === 'user' ? 'user' : 'bot';
+                    this.addMessage(msg.content, sender);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading chat history:', error);
+        }
+    }
+    
+    async clearChat() {
+        try {
+            await fetch('/chatbot/clear', { method: 'POST' });
+            this.chatMessages.innerHTML = `
+                <div class="message bot-message mb-3">
+                    <div class="d-flex">
+                        <div class="me-2">
+                            <i class="fas fa-robot text-primary"></i>
+                        </div>
+                        <div class="message-content">
+                            <strong>Support Assistant:</strong><br>
+                            Chat cleared! How can I help you today?
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Error clearing chat:', error);
+        }
+    }
+}
+
+// Initialize chatbot when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    const chatBot = new ChatBot();
+    
+    // Check for quick question from widget
+    const quickQuestion = sessionStorage.getItem('quickQuestion');
+    if (quickQuestion) {
+        // Set the question in the input and send it
+        chatBot.messageInput.value = quickQuestion;
+        chatBot.sendMessage();
+        sessionStorage.removeItem('quickQuestion');
+    }
+});
+</script>
+{% endblock %}
